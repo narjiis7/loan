@@ -1,13 +1,92 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <link rel="stylesheet" href="/src/app.css" />
-    <title>سلفة شخصية - mini app</title>
+    <title>Login - MiniApp</title>
+    <script src="https://cdn.marmot-cloud.com/npm/hylid-bridge/2.10.0/index.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        background: #f5f5f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      .container {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        width: 300px;
+        text-align: center;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      .login-btn { background: #007bff; color: #fff; }
+      .copy-btn { background: #28a745; color: #fff; }
+      #authCode, #result {
+        margin-top: 15px;
+        font-size: 14px;
+        color: #333;
+        word-break: break-word;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <div class="container">
+      <button class="login-btn" onclick="login()">login</button>
+      <button class="copy-btn" onclick="copyAuthCode()">Copy Code</button>
+      <p id="authCode"></p>
+      <p id="result"></p>
+    </div>
+
+    <script>
+      let authCode = '';
+
+      async function login() {
+        my.getAuthCode({
+          scopes: { 'auth_base': 'USER_ID' },
+          success: async (res) => {
+            authCode = res.authCode;
+            document.getElementById("authCode").textContent = "Auth Code: " + authCode;
+
+            try {
+              const response = await fetch("http://server.mouamle.space:19990/api/auth-with-superQi", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: authCode })
+              });
+
+              const data = await response.json();
+              document.getElementById("result").textContent = "Auth Result: " + JSON.stringify(data);
+            } catch (err) {
+              document.getElementById("result").textContent = "API connection failed";
+            }
+          },
+          fail: (err) => {
+            document.getElementById("result").textContent = "Failed to get auth code";
+            console.error(err);
+          }
+        });
+      }
+
+      function copyAuthCode() {
+        if (authCode) {
+          navigator.clipboard.writeText(authCode);
+          alert("Code copied!");
+        } else {
+          alert("No code to copy yet.");
+        }
+      }
+    </script>
   </body>
 </html>

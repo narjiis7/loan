@@ -1,4 +1,6 @@
+
 <script>
+  import Auth from './Auth.svelte';
   let showModal = false;
 
   // نموذج البيانات مع مدة السداد مضافة
