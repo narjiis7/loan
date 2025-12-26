@@ -23,6 +23,12 @@
             Login
         </button>
 
+             <button
+            class="bg-blue-500 text-white px-6 py-2 rounded-md"
+            onclick="payment()">
+            pay
+        </button>
+
         <p class="text-sm">
             Auth Code:
             <span id="authCode" class="font-mono"></span>
@@ -63,6 +69,22 @@
                     });
                 }
             });
+        }
+
+        function payment() {
+my.tradePay({
+  paymentUrl: "https://www.wallet.com/cashier?orderId=xxxxxxx", // get the redirectUrl from the server first
+  success: (res) => {
+    my.alert({
+      content: JSON.stringify(res),
+    });
+  },
+  fail: (res) => {
+    my.alert({
+      content: JSON.stringify(res),
+    });
+  }
+});
         }
     </script>
 
