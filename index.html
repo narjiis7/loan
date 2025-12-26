@@ -3,142 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo MiniApp</title>
+    <title>Auth Page</title>
 
-    <!-- MiniApp Bridge -->
     <script src="https://cdn.marmot-cloud.com/npm/hylid-bridge/2.10.0/index.js"></script>
-
-    <!-- Tailwind -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
 <body class="bg-gray-100">
 
-    <!-- Header -->
-    <div class="h-16 w-full bg-stone-700 flex items-center px-4 fixed top-0 left-0 z-10">
-        <h1 class="text-2xl font-bold text-white">Demo MiniApp</h1>
+    <div class="h-16 w-full bg-stone-700 flex items-center px-4 fixed top-0">
+        <h1 class="text-xl text-white font-bold">Authentication</h1>
     </div>
 
-    <!-- Content -->
-    <div class="w-full min-h-screen flex flex-col items-center gap-4 pt-24 px-4">
+    <div class="pt-24 flex flex-col items-center gap-4">
 
-        <!-- Login -->
         <button
-            class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md"
+            class="bg-blue-500 text-white px-6 py-2 rounded-md"
             onclick="authenticate()">
             Login
         </button>
 
-        <!-- Auth Code -->
-        <p class="text-sm text-gray-600">
+        <p class="text-sm">
             Auth Code:
-            <span id="authCode" class="font-mono text-black"></span>
+            <span id="authCode" class="font-mono"></span>
         </p>
-
-        <button
-            class="bg-gray-500 text-white px-4 py-1 rounded-md"
-            onclick="copyAuthCode()">
-            Copy Auth Code
-        </button>
-
-        <!-- Pay Button -->
-        <button
-            id="payBtn"
-            class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md hidden"
-            onclick="payNow()">
-            Pay Now
-        </button>
 
     </div>
 
     <script>
-        let authCode = '';
-        let tradeNO = '';
-
-        // =====================
-        // AUTHENTICATION
-        // =====================
         function authenticate() {
             my.getAuthCode({
                 scopes: ['auth_base', 'USER_ID'],
                 success: (res) => {
-                    authCode = res.authCode;
+
+                    const authCode = res.authCode;
                     document.getElementById('authCode').textContent = authCode;
 
-                    // Send authCode to backend
                     fetch('https://its.mouamle.space/api/auth-with-superQi', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            token: authCode
-                        })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: authCode })
                     })
                     .then(res => res.json())
                     .then(data => {
-                        // Expecting tradeNO from backend
-                        tradeNO = data.tradeNO;
+                        // tradeNO جاي من الباك إند
+                        const tradeNO = data.tradeNO;
 
-                        if (tradeNO) {
-                            document.getElementById('payBtn').classList.remove('hidden');
+                        if (!tradeNO) {
+                            my.alert({ content: 'No trade number received' });
+                            return;
                         }
 
-                        my.alert({
-                            content: 'Login successful ✅'
-                        });
-                    })
-                    .catch(err => {
-                        my.alert({
-                            content: 'Login failed ❌'
-                        });
-                    });
-                },
-                fail: (err) => {
-                    my.alert({
-                        content: 'Auth error'
-                    });
-                }
-            });
-        }
+                        // خزّن tradeNO وانتقل لصفحة الدفع
+                        localStorage.setItem('tradeNO', tradeNO);
 
-        // =====================
-        // COPY AUTH CODE
-        // =====================
-        function copyAuthCode() {
-            if (!authCode) {
-                my.alert({ content: 'No Auth Code yet' });
-                return;
-            }
-            navigator.clipboard.writeText(authCode);
-            my.alert({ content: 'Auth Code copied 📋' });
-        }
-
-        // =====================
-        // PAYMENT
-        // =====================
-        function payNow() {
-            if (!tradeNO) {
-                my.alert({ content: 'No payment order found' });
-                return;
-            }
-
-            my.tradePay({
-                tradeNO: tradeNO,
-                success: (res) => {
-                    if (res.resultCode === '9000') {
-                        my.alert({
-                            content: 'Payment Successful 🎉'
+                        my.navigateTo({
+                            url: '/payment.html'
                         });
-                    } else {
-                        my.alert({
-                            content: 'Payment Failed ❌'
-                        });
-                    }
-                },
-                fail: () => {
-                    my.alert({
-                        content: 'Payment Error'
                     });
                 }
             });
