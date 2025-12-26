@@ -1,82 +1,80 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auth Page</title>
-
+    <title>Demo MiniApp</title>
     <script src="https://cdn.marmot-cloud.com/npm/hylid-bridge/2.10.0/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+
 </head>
 
-<body class="bg-gray-100">
-
-    <div class="h-16 w-full bg-stone-700 flex items-center px-4 fixed top-0">
-        <h1 class="text-xl text-white font-bold">Authentication</h1>
+<body>
+    <div class="h-16 w-full bg-stone-700 flex items-center justify-start px-4 fixed top-0 left-0 z-10">
+        <h1 class="text-2xl font-bold text-white">Demo MiniApp</h1>
     </div>
 
-    <div class="pt-24 flex flex-col items-center gap-4">
+    <div class="w-full h-screen flex flex-col items-center gap-4 justify-start p-4 mt-16">
+        <button class="bg-blue-500 text-white px-4 py-2 rounded-md" onclick="authenticate()">Login</button>
+        <button class="bg-blue-500 text-white px-4 py-2 rounded-md" onclick="pay()">Pay</button>
 
-        <button
-            class="bg-blue-500 text-white px-6 py-2 rounded-md"
-            onclick="authenticate()">
-            Login
-        </button>
 
-             <button
-            class="bg-blue-500 text-white px-6 py-2 rounded-md"
-            onclick="payment()">
-            pay
-        </button>
-
-        <p class="text-sm">
-            Auth Code:
-            <span id="authCode" class="font-mono"></span>
-        </p>
-
+        <p class="text-sm text-gray-500">Auth Code: <span id="authCode"></span></p>
     </div>
 
     <script>
+        var authCode = '';
+        var token = '';
+
         function authenticate() {
             my.getAuthCode({
                 scopes: ['auth_base', 'USER_ID'],
                 success: (res) => {
-
-                    const authCode = res.authCode;
+                    authCode = res.authCode;
                     document.getElementById('authCode').textContent = authCode;
 
                     fetch('https://its.mouamle.space/api/auth-with-superQi', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: authCode })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        // tradeNO جاي من الباك إند
-                        const tradeNO = data.tradeNO;
-
-                        if (!tradeNO) {
-                            my.alert({ content: 'No trade number received' });
-                            return;
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            token: authCode
+                        })
+                    }).then(res => res.json()).then(data => {
+                        token = data.token;
+                        my.alert({
+                            content: "Login successful",
+                        });
+                    }).catch(err => {
+                        let errorDetails = '';
+                        if (err && typeof err === 'object') {
+                            errorDetails = JSON.stringify(err, null, 2);
+                        } else {
+                            errorDetails = String(err);
                         }
-
-                        // خزّن tradeNO وانتقل لصفحة الدفع
-                        localStorage.setItem('tradeNO', tradeNO);
-
-                        my.navigateTo({
-                            url: '/payment.html'
+                        my.alert({
+                            content: "Error: " + errorDetails,
                         });
                     });
-                }
+                },
+                fail: (res) => {
+                    console.log(res.authErrorScopes)
+                },
             });
+
         }
-        function payment() {
+
+        function pay() {
             fetch('https://its.mouamle.space/api/payment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': token
-                },
+                    },
             }).then(res => res.json()).then(data => {
                 my.tradePay({
                     paymentUrl: data.url,
@@ -92,8 +90,11 @@
                 });
             });
         }
-        
-    </script>
 
+        function copyAuthCode() {
+            navigator.clipboard.writeText(authCode);
+        }
+    </script>
 </body>
+
 </html>
