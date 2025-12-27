@@ -20,6 +20,7 @@
     <div class="w-full h-screen flex flex-col items-center gap-4 justify-start p-4 mt-16">
         <button class="bg-blue-500 text-white px-4 py-2 rounded-md" onclick="authenticate()">Login</button>
         <button class="bg-blue-500 text-white px-4 py-2 rounded-md" onclick="pay()">Pay</button>
+         <button class="bg-blue-500 text-white px-4 py-2 rounded-md" onclick="showQR()">QR</button>
 
 
         <p class="text-sm text-gray-500">Auth Code: <span id="authCode"></span></p>
@@ -94,7 +95,30 @@
         function copyAuthCode() {
             navigator.clipboard.writeText(authCode);
         }
-    </script>
-</body>
+        
+    function showQR() {
+        my.scan({
+            type: 'qr', // you can also use 'bar' for barcodes
+            success: (res) => {
+                // res.code contains the scanned QR content
+                my.alert({
+                    content: "Scanned QR: " + res.code,
+                });
+
+                // Example: if QR takes you to Bark system, redirect
+                if (res.code.includes("bark-system")) {
+                    window.location.href = res.code; 
+                }
+            },
+            fail: (err) => {
+                my.alert({
+                    content: "Scan failed: " + JSON.stringify(err),
+                });
+            }
+        });
+    }
+</script>
+    </body>
+
 
 </html>
