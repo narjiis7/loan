@@ -85,10 +85,22 @@
       }
     }
 
+    function searchProperty() {
+    const query = document.getElementById("searchBox").value.toLowerCase();
+    const cards = document.querySelectorAll("#properties .card");
+
+    cards.forEach(card => {
+      const name = card.getAttribute("data-name").toLowerCase();
+      // إذا الاسم يحتوي على النص اللي كتبه المستخدم يظهر الكارت
+      card.style.display = name.includes(query) ? "block" : "none";
+    });
+  }
+
     // Event Listeners
     document.getElementById('loginBtn').addEventListener('click', authenticate);
     document.getElementById('payBtn').addEventListener('click', pay);
     document.getElementById('qrBtn').addEventListener('click', showQR);
+    document.getElementById('searchBtn').addEventListener('click', searchProperty);
   </script>
 </body>
 </html>
